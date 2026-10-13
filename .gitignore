@@ -44,7 +44,8 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Learning notebook documents
+# Learning notebook and demo script documents
 Autonomous_QA_Agent_Learning_Notebook.docx
 Autonomous_QA_Agent_Learning_Notebook.pdf
+Autonomous_QA_Agent_Demo_Script.docx
 
