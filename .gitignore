@@ -1,0 +1,45 @@
+# Environment variables and credentials
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python compiled bytecode & runtime caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest & testing artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node.js dependencies & logs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Web application temporary uploads and build artifacts
+web/server/uploads/
+web/client/dist/
+reports/jobs/
+
+# Local execution logs (preserves historical reports and screenshot evidence)
+reports/run_log.jsonl
+*.log
+
+# Operating system & editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

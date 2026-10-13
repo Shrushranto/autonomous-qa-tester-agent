@@ -1,0 +1,36 @@
+{
+  "test_cases": [
+    {
+      "id": "T1",
+      "rule_id": "R1",
+      "objective": "Verify quantity validation for cart items including boundary limits",
+      "initial_conditions": "Item in cart with quantity 1",
+      "expected_outcome": "Quantities of 0 or negative are rejected; quantity of 10 is accepted.",
+      "goal": "Attempt to set item quantity to -1, then 0, then 10 in the cart."
+    },
+    {
+      "id": "T2",
+      "rule_id": "R4",
+      "objective": "Verify correct calculation of cart total",
+      "initial_conditions": "Clean cart, two items added with known prices",
+      "expected_outcome": "Total equals the sum of (price * quantity) for all items minus any applied discount.",
+      "goal": "Add two specific items to the cart and verify the displayed total matches the calculated sum."
+    },
+    {
+      "id": "T3",
+      "rule_id": "R3",
+      "objective": "Verify coupon usage limit",
+      "initial_conditions": "Cart with items, valid coupon code available",
+      "expected_outcome": "Coupon is applied once; subsequent attempts do not further reduce the total.",
+      "goal": "Apply a coupon code twice and confirm the total does not decrease after the first application."
+    },
+    {
+      "id": "T4",
+      "rule_id": "R5",
+      "objective": "Verify email validation for user signup",
+      "initial_conditions": "Signup page",
+      "expected_outcome": "Invalid email formats are rejected; valid email formats are accepted.",
+      "goal": "Attempt signup with an invalid email string (e.g., 'testemail') and verify failure, then try a valid email."
+    }
+  ]
+}

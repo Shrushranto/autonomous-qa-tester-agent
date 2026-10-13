@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cart — Shopper Stop</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Shopper Stop</h1>
+    <nav>
+      <a id="nav-home" href="/">Products</a>
+      <a id="nav-cart" href="/cart.html">Cart</a>
+      <a id="nav-signup" href="/signup.html">Signup</a>
+    </nav>
+  </header>
+  <main>
+    <p id="message" class="message" hidden></p>
+    <h2>Your cart</h2>
+    <div id="cart-empty">Cart is empty.</div>
+    <table id="cart-table" hidden>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Price</th>
+          <th>Quantity</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="cart-body"></tbody>
+    </table>
+    <p id="cart-total">Cart total: Rs 0</p>
+    <form id="coupon-form">
+      <label for="coupon-code">Coupon</label>
+      <input id="coupon-code" name="coupon" type="text" placeholder="SAVE10" />
+      <button id="apply-coupon" type="submit">Apply coupon</button>
+    </form>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

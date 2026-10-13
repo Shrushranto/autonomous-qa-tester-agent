@@ -1,0 +1,201 @@
+Build a Minimal Autonomous QA Tester Agent
+Coding-tool prompt for the CentrAlign AI Engineering Intern project
+Final version | Node.js + Express demo app | Python agent
+How to use this document: paste everything from Section 1 onward into your coding tool (Claude Code, Cursor, etc.). Let it give you the plan first, then confirm each stage yourself before it continues. This version builds the demo shop with Node.js and Express (plain HTML, CSS and JavaScript on the frontend); the agent itself stays in Python.
+1. Your role
+Act as a pragmatic senior AI engineer. Build a small, working prototype of an Autonomous QA Tester Agent for an AI Engineering Intern application at CentrAlign AI.
+Prioritize working end-to-end execution, genuine LLM-driven decisions, reliability, independent verification, and understandable code over the number of features or lines of code.
+I am a student working under a short deadline. The project must be simple enough for me to understand, explain, debug, and modify during a live technical interview.
+Do not overengineer. Do not create unnecessary abstractions, classes, frameworks, or files.
+Working style (important): Build in the stages listed in Section 11. After each stage, run the code, show me the real output, explain what you built in 3 to 5 plain sentences, and WAIT for my confirmation before starting the next stage. Never dump the whole project at once.
+2. Project objective
+Build an AI agent that accepts:
+A local demo web application's URL.
+A plain-English feature specification (a Markdown file) describing expected behavior.
+The agent inspects the application in a real browser, generates a small number of relevant test cases, chooses browser actions based on what it observes, detects possible violations of the specification, independently reproduces suspected bugs, and writes a Markdown bug report.
+Example task: 'Test the shopping cart. Users can add products, change quantities, remove products, and see the correct total. Quantities must be positive. Applying the same coupon repeatedly must not apply the discount more than once. Signup requires a valid email.'
+The agent must NOT execute a hardcoded test script. The LLM must make meaningful decisions from the specification and the current browser observation.
+3. Strict scope limits
+Build only:
+One small Express (Node.js) shopping application with a plain HTML, CSS and vanilla JavaScript frontend and in-memory state.
+One local specification file.
+One Playwright-controlled browser (Python).
+One LLM provider and model.
+A Python agent loop.
+A small set of browser actions.
+Deterministic checks plus LLM-assisted interpretation.
+Independent reproduction of suspected bugs.
+A Markdown bug report with screenshot evidence and a step-by-step run log.
+A small set of unit tests for the agent's own critical logic.
+Do NOT build:
+A dashboard or UI for the agent, any database (no MongoDB), React or another frontend framework, vector search or embeddings, multiple agents, a general-purpose browser framework, Docker, login or authentication, visual regression testing, long-term memory, support for arbitrary websites, a configuration framework, an evaluation platform, multiple LLM providers, or a custom planning framework.
+Use simple functions and few modules.
+4. Technology
+Agent: Python 3.10+. Playwright (sync API) for the browser. Do not add another browser automation library.
+Demo app: Node.js 18+ and Express, serving static HTML, CSS and vanilla JavaScript from a public/ folder. State lives in server memory (plain JavaScript objects), with no database, so resets are deterministic. Use cross-env so the BUGS variable works on Windows, Mac and Linux.
+LLM: Anthropic Claude through the official anthropic Python SDK. The model name is read from the environment variable LLM_MODEL (default claude-haiku-5-5). The API key comes from ANTHROPIC_API_KEY in .env.
+Pydantic for validating LLM output, pytest for tests, python-dotenv for .env.
+All LLM calls must request JSON only and be validated with Pydantic. Enforce a global cap MAX_LLM_CALLS (default 60) per run and stop cleanly with a clear message if it is reached.
+The specification is a plain Markdown file. No PDF processing.
+5. Required workflow
+Goal > Understand > Plan > Execute > Observe > Judge > Reproduce > Report
+Step 1: Understand the task
+Read the specification. Ask the LLM to extract a small number of explicit, testable rules. Each rule has: a unique ID (for example R1), a concise description, the expected behavior, and how it can be verified.
+Never invent requirements that are not in the specification.
+If an important requirement is ambiguous, ask the user ONE concise clarification question (action ask_user) before testing that requirement, and remember the answer for the rest of the run. Do not ask about minor details.
+The spec deliberately contains one ambiguity (the maximum quantity per item is not stated). The agent should notice it and ask. Support --answers answers.json so ask_user can be answered non-interactively (for tests and demo recording); without that flag, ask on the command line.
+Step 2: Generate test cases
+Ask the LLM for at least one and at most six test cases, covering each specification rule at least once.
+Each test case has: objective, specification rule ID, initial conditions, expected outcome, and a goal the agent can achieve through browser interaction (optionally a short list of suggested actions, which are hints only).
+Include normal, boundary, or negative cases only when justified by the specification. Keep the plan small and easy to inspect. Save it to reports/test_plan.json.
+Step 3: Observe the application
+Launch the demo app in a Playwright browser and build a compact snapshot of the current page: visible buttons and labels, visible inputs with type, label and current value, links and labels, and relevant visible text.
+[1] button "Add to cart"
+[2] input[number] "Quantity" value="1"
+[3] input[text] "Coupon"
+[4] button "Apply coupon"
+PAGE TEXT: Cart total: Rs 1,200
+Locators (important): the numbers are only for the LLM to refer to elements within one snapshot. Each snapshot entry must also carry a stable locator computed by fixed, developer-written code, in this priority order: id, then data-testid, then name, then role plus accessible label. When the LLM chooses element [3], the agent resolves it to that stable locator before executing, and records the stable locator, not the number, in the action history. Replay uses the stable locator, because numbers change between page loads. The demo app must give every interactive element a unique id.
+Timing: the demo pages update after fetch calls. After every action, wait for the network to go idle and for the DOM to be stable for a short moment before taking the next snapshot, so the agent never reads a stale page.
+Do not send the full HTML or full-page screenshots to the LLM.
+Step 4: Execute actions with a bounded agent loop
+At each iteration:
+Take a snapshot of the current page.
+Send the LLM: the test case, the relevant rule, the previous action result, and the snapshot.
+Ask it for the next action.
+Validate the response with Pydantic.
+Check that the action is allowed.
+Execute it with Playwright.
+Record the result.
+Observe again.
+Continue until the test is complete, blocked, or out of budget.
+Allowed actions only: click, fill, select, press, goto, finish, ask_user.
+goto may only open paths on the demo app's own localhost origin. Reject any other URL.
+Every action must include a short thought field explaining why it was chosen.
+Reject invalid or unsupported actions. Allow at most ONE corrective LLM request after malformed output.
+Maximum 10 actions per test, plus a per-test timeout. Stop if the agent revisits the same state without progress.
+The only JavaScript that may run in the page is the fixed, developer-written snapshot code. Never execute arbitrary JavaScript, Python, or shell commands generated by the LLM.
+The LLM must base each action on the latest observation. Do not hardcode a full action sequence for any test.
+Decision trace: append every step to reports/run_log.jsonl with: test ID, step number, short observation summary, chosen action, thought, and result. I must be able to explain from this log why the agent did what it did.
+Step 5: Record evidence
+After relevant actions, record: visible page state, console errors and uncaught page exceptions, failed network requests and HTTP error responses, action failures and timeouts, and screenshots of suspected failures.
+Do not treat every console message or failed request as a bug. A signal counts only if it is relevant to the specification or is a clearly demonstrated application failure.
+Step 6: Judge suspected bugs
+Use deterministic Python checks wherever facts can be computed:
+Displayed cart total versus the sum of known item prices times quantities.
+Coupon applied more than once versus the stated coupon rule.
+Negative or zero quantity accepted versus the stated rule.
+Invalid email accepted versus the stated rule.
+The demo app exposes GET /__state (JSON: cart items, prices, quantities, applied coupons, registered emails) for verification only. Deterministic checks may read it; it must never be shown to the LLM when it chooses actions.
+Keep all app-specific checks in ONE clearly labeled place (a single function or section called app_checks). The agent loop, planner, and reproduction code must contain no shop-specific strings, so a different app and spec would need only a new app_checks.
+Use the LLM for judgment only when interpretation of the spec or behavior is required.
+Every suspected bug must reference a specific specification rule ID. If no rule or clearly defined expected behavior was violated, mark it inconclusive; never invent a bug.
+Statuses: confirmed, inconclusive, not_reproduced.
+Step 7: Independently reproduce suspected bugs
+For every suspected bug:
+Take the recorded sequence of actions (stable locators and values).
+Call POST /__reset on the demo app and start a fresh browser context.
+Replay the actions with deterministic Playwright code, with no LLM involved.
+Re-check the same expected-versus-actual condition.
+Repeat once more in another fresh context after another reset.
+Mark a bug confirmed only if the violation reproduces in 2 of 2 independent replay attempts. If replay fails, mark it not_reproduced. If the environment prevents a fair replay, mark it inconclusive. Never report an LLM suspicion as confirmed without this evidence.
+Step 8: Generate the report
+Write reports/bug_report.md.
+For each confirmed bug: title, severity (only if reasonably justified), rule ID and text, steps to reproduce, expected result, actual result, reproduction result (for example 2/2), screenshot path, and relevant browser or network evidence.
+Also include: tests executed, tests passed, confirmed bugs, inconclusive findings, tests that could not complete, the clarification questions asked and answers used, and known limitations.
+Do not claim a bug was found or a test passed without recorded evidence.
+6. Demo shopping application (Node.js + Express)
+A deliberately small Express app (demo_shop/server.js) serving static pages from demo_shop/public/: a product list, add to cart, quantity controls, a cart total, item removal, a coupon field, and a simple signup form. Plain HTML, CSS and vanilla JavaScript on the frontend. Local dummy data only, stored in server memory. The server computes and returns the cart total. Every interactive element has a unique id. The app runs on http://localhost:3000.
+Planted bugs are selected with the environment variable BUGS, a comma-separated list. Valid values: coupon_twice, negative_qty, stale_total, bad_email. BUGS=none (or unset) runs the correct app. Implement the bugs on the server side so they can be verified through /__state.
+coupon_twice: the same coupon can be applied more than once.
+negative_qty: negative quantities are accepted.
+stale_total: the total does not update after an item is removed.
+bad_email: invalid email addresses are accepted.
+Provide npm scripts in package.json (using cross-env) and document them in the README:
+npm run start:clean      # BUGS=none
+npm run start:all-bugs   # all four planted bugs
+npm run start:bug -- coupon_twice   # a single bug (or document an equivalent)
+Endpoints for testing: POST /__reset (clears all application state: cart, coupons, signups) and GET /__state (see Step 6).
+Write specs/shop.md stating the correct behavior of ALL four rules explicitly (positive integer quantities, coupon applies only once per order, total always equals the sum of item prices times quantities, signup requires a valid email), plus the one deliberate ambiguity (maximum quantity per item is not specified).
+Keep the app simple enough to inspect and debug manually.
+7. Project structure
+Prefer this, but use fewer files if combining makes the code clearer:
+qa-agent/
+|-- app.py              # command-line entry point (Python)
+|-- agent.py            # spec understanding, planning, loop, judging, reproduction
+|-- browser.py          # Playwright, snapshots, stable locators, actions, evidence
+|-- models.py           # Pydantic models (may be merged into agent.py)
+|-- demo_shop/          # Node demo app
+|   |-- server.js       # Express routes, in-memory state, BUGS toggles,
+|   |                   # POST /__reset, GET /__state
+|   |-- package.json    # scripts: start:clean, start:all-bugs
+|   |-- public/         # index.html, cart.html, signup.html, style.css, app.js
+|-- specs/shop.md
+|-- answers.example.json
+|-- reports/
+|-- tests/test_agent.py
+|-- requirements.txt
+|-- .env.example
+|-- .gitignore
+|-- README.md
+Do not create a module for every small function.
+8. Engineering constraints
+Keep the implementation small. Aim for roughly 400 to 700 lines of production Python excluding tests, templates, the Node demo app and docs. This is a soft bound, not a quota; never remove verification or safety checks just to save lines.
+Use clear function names, type hints where helpful, short docstrings on important functions, explicit error handling, simple data structures, centralized constants for limits and timeouts (MAX_ACTIONS_PER_TEST, TEST_TIMEOUT, MAX_LLM_CALLS), and environment variables for secrets.
+Avoid: class hierarchies, plugin systems, generic interfaces, repeated prompt templates, giant functions, silent exception handling, and comments that only restate the code.
+9. Testing and evaluation
+Write pytest tests for deterministic logic:
+Invalid LLM action JSON is rejected.
+Unsupported actions are rejected, including goto to a non-localhost URL.
+The action budget is enforced.
+A cart-total mismatch is detected.
+A finding without a valid rule ID cannot be marked confirmed.
+A suspected bug that fails independent reproduction is not reported as confirmed.
+A recorded action sequence replays correctly using stable locators.
+The Node app starts, POST /__reset is called, and GET /__state returns an empty cart.
+Run the app and the test suite. Fix failures rather than writing tests that merely look correct.
+Evaluation runs (report real numbers only):
+BUGS=coupon_twice,negative_qty,stale_total,bad_email: how many of the 4 were confirmed, and how many false positives?
+BUGS=none: how many false positives? (expected 0)
+Run each configuration at least twice and report the actual results, including misses. Never fabricate detection rates, runs, or scores.
+If no API key is available, fail with a clear setup message. A deterministic fixture may be used inside unit tests, but do not present it as evidence of autonomous LLM behavior.
+10. README requirements
+A concise, complete README covering: the problem and objective, the architecture, setup for both Python and Node (npm install inside demo_shop/), API key configuration, launching the demo app (with the BUGS options), running the agent (including --answers), running tests, a real example of the agent's output, how the LLM selects actions, how stable locators and replay work, how independent reproduction works, the evaluation results table (both configurations), limitations and failure cases, design decisions and trade-offs (including why in-memory state and no MongoDB), the model and API used, assumptions, and future improvements.
+Clearly separate implemented functionality from planned functionality.
+11. Build stages (confirm with me after each)
+Inspect the environment; create the minimal project structure, requirements.txt and package.json.
+Express shop, BUGS toggles, /__reset, /__state, and specs/shop.md. Run it and show it works with and without bugs.
+browser.py: startup, snapshot, stable locators, allowed actions, evidence capture. Demonstrate on the shop.
+LLM wrapper with Pydantic validation, one retry, and the call cap. Show one real structured response.
+Spec understanding and test planning (including the clarification question).
+The bounded agent loop with run_log.jsonl. Show ONE complete test running end to end.
+Deterministic checks (app_checks), judging, and independent reproduction.
+The Markdown report.
+Unit tests.
+Full runs: all bugs enabled, then BUGS=none. Report real results and fix real failures.
+Finish the README with exact run commands.
+If the design becomes too complex, reduce the number of test cases or supported actions instead of adding infrastructure.
+12. Definition of done
+The project is done only when all of these were actually tested:
+The Node demo app runs locally with and without planted bugs.
+A natural-language specification is provided.
+The LLM generates the test cases.
+The LLM chooses browser actions from current observations.
+The browser executes them and evidence is recorded in the run log.
+At least one planted bug is detected and independently reproduced (2 of 2).
+The agent asked the clarification question during a run.
+The Markdown report contains the rule, reproduction steps, expected and actual results, and evidence.
+The BUGS=none run was done and its false-positive count is reported.
+The unit tests pass.
+The setup instructions work in a clean environment.
+Do not claim completion for anything that has not actually been run.
+13. Final instructions
+Before coding, give me a short implementation plan and list your assumptions, then wait for my confirmation. Build stage by stage as described above.
+When finished, summarize:
+What works.
+What has actually been tested, with real results.
+What remains incomplete.
+Exact installation and run commands (Python and Node).
+The main files I should understand before a technical interview.
+A concise explanation of the agent loop and the key design trade-offs.
+The goal is a small, real, explainable autonomous agent, not a large codebase I cannot defend in an interview.

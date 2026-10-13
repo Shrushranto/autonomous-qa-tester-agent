@@ -1,0 +1,25 @@
+{
+  "name": "autonomous-qa-tester-root",
+  "version": "1.0.0",
+  "description": "Autonomous QA Tester Agent with MERN Web Interface",
+  "scripts": {
+    "server": "npm --prefix web/server start",
+    "server:dev": "npm --prefix web/server run dev",
+    "client": "npm --prefix web/client run dev",
+    "client:build": "npm --prefix web/client run build",
+    "test:server": "npm --prefix web/server test",
+    "test:client": "npm --prefix web/client test",
+    "test:python": ".venv\\Scripts\\python.exe -m pytest tests\\test_agent.py tests\\test_gemini_failures.py -v",
+    "test:all": "npm run test:server && npm run test:client && npm run test:python"
+  },
+  "keywords": [
+    "qa",
+    "testing",
+    "agent",
+    "gemini",
+    "playwright",
+    "mern"
+  ],
+  "author": "",
+  "license": "ISC"
+}

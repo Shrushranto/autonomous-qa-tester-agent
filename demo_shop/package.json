@@ -1,0 +1,17 @@
+{
+  "name": "demo-shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "In-memory Express shop used as the QA agent's test target",
+  "main": "server.js",
+  "scripts": {
+    "start": "cross-env BUGS=none node server.js",
+    "start:clean": "cross-env BUGS=none node server.js",
+    "start:all-bugs": "cross-env BUGS=coupon_twice,negative_qty,stale_total,bad_email node server.js",
+    "start:bug": "node server.js"
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,72 @@
+:root {
+  --ink: #1b1b1b;
+  --muted: #5c5c5c;
+  --line: #d9d9d9;
+  --bg: #f7f4ee;
+  --card: #fff;
+  --accent: #0f6b4c;
+  --danger: #9b1c1c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--card);
+}
+
+h1 { margin: 0; font-size: 1.25rem; }
+
+nav a {
+  margin-left: 1rem;
+  color: var(--accent);
+}
+
+main { max-width: 720px; margin: 1.5rem auto; padding: 0 1rem; }
+
+.product-list { list-style: none; padding: 0; }
+.product-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.6rem;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+
+button.secondary { background: #444; }
+
+input {
+  padding: 0.4rem 0.5rem;
+  margin-right: 0.4rem;
+}
+
+table { width: 100%; border-collapse: collapse; background: var(--card); }
+th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid var(--line); }
+
+.message { padding: 0.6rem 0.8rem; background: #eee; }
+.message.error { background: #f8d7d7; color: var(--danger); }
+.message.ok { background: #d7efe4; color: var(--accent); }
+
+#cart-total { font-size: 1.15rem; }
+#coupon-form, #signup-form { margin-top: 1rem; }
