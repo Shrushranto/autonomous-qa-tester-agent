@@ -61,29 +61,39 @@ export default function ReportView({ jobId, targetUrl, specFilename, completedAt
   const sanitizedHtml = useMemo(() => {
     if (!markdown) return '';
 
-    // Custom renderer or post-process image URLs to point to /api/tests/:id/evidence/:filename
     const renderer = new marked.Renderer();
-    const originalImage = renderer.image.bind(renderer);
 
-    renderer.image = function (href, title, text) {
-      // In marked v15, args might be an object or positional: ({ href, title, text }) or (href, title, text)
-      let actualHref = typeof href === 'object' ? href.href : href;
-      let actualTitle = typeof href === 'object' ? href.title : title;
-      let actualText = typeof href === 'object' ? href.text : text;
+    renderer.image = function (token) {
+      let href = '';
+      let text = '';
+      let title = '';
 
-      if (actualHref && !actualHref.startsWith('http') && !actualHref.startsWith('/')) {
-        // Relative screenshot path like "bug_bug-1.png"
-        actualHref = getEvidenceUrl(jobId, actualHref);
+      if (token && typeof token === 'object') {
+        href = token.href || '';
+        text = token.text || '';
+        title = token.title || '';
+      } else {
+        // Fallback for positional signature
+        href = arguments[0] || '';
+        title = arguments[1] || '';
+        text = arguments[2] || '';
       }
 
-      return originalImage.call(this, actualHref, actualTitle, actualText);
+      if (href && !href.startsWith('http') && !href.startsWith('/')) {
+        // Map relative filename (e.g. bug_r3.png) to backend evidence endpoint
+        href = getEvidenceUrl(jobId, href);
+      }
+
+      const altAttr = text ? ` alt="${text}"` : ' alt="Bug Screenshot Evidence"';
+      const titleAttr = title ? ` title="${title}"` : '';
+      return `<div class="report-evidence-wrapper" style="margin: 1.25rem 0;"><img src="${href}"${altAttr}${titleAttr} class="report-evidence-img" style="max-width: 100%; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35); display: block;" loading="lazy" /></div>`;
     };
 
     const rawHtml = marked.parse(markdown, { renderer, gfm: true, breaks: true });
     
     // Sanitize with DOMPurify
     return DOMPurify.sanitize(rawHtml, {
-      ADD_ATTR: ['target', 'rel'],
+      ADD_ATTR: ['target', 'rel', 'style', 'loading'],
       FORBID_TAGS: ['script', 'iframe', 'object', 'embed']
     });
   }, [markdown, jobId]);
