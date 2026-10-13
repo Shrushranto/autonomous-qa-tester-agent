@@ -13,30 +13,48 @@ export default function ReportView({ jobId, targetUrl, specFilename, completedAt
     let passed = 0;
     let inconclusive = 0;
     let unable = 0;
+    let failed = 0;
 
-    // Check for "Total Attempted | X" in summary table
-    const totalMatch = markdown.match(/Total Attempted\s*\|\s*(\d+)/i);
+    // Check for "Tests Attempted | X" or "Total Attempted | X" in summary table
+    const totalMatch = markdown.match(/(?:Tests|Total)\s*Attempted\*{0,2}[^|]*\|\s*(\d+)/i);
     if (totalMatch) total = parseInt(totalMatch[1], 10);
 
-    const confMatch = markdown.match(/Confirmed Bugs\s*\|\s*(\d+)/i);
+    const confMatch = markdown.match(/Confirmed\s*Bugs\*{0,2}[^|]*\|\s*(\d+)/i);
     if (confMatch) confirmed = parseInt(confMatch[1], 10);
 
-    const passMatch = markdown.match(/Passed\s*\|\s*(\d+)/i);
+    const passMatch = markdown.match(/(?:Tests\s*)?Passed\*{0,2}[^|]*\|\s*(\d+)/i);
     if (passMatch) passed = parseInt(passMatch[1], 10);
 
-    const incMatch = markdown.match(/Inconclusive\s*\|\s*(\d+)/i);
+    const failMatch = markdown.match(/(?:Tests\s*)?Failed\*{0,2}[^|]*\|\s*(\d+)/i);
+    if (failMatch) failed = parseInt(failMatch[1], 10);
+
+    const incMatch = markdown.match(/Inconclusive(?:\s*Findings)?\*{0,2}[^|]*\|\s*(\d+)/i);
     if (incMatch) inconclusive = parseInt(incMatch[1], 10);
 
-    const unableMatch = markdown.match(/Unable to Complete\s*\|\s*(\d+)/i);
+    const unableMatch = markdown.match(/(?:Tests\s*)?Unable(?:\s*to\s*Complete)?\*{0,2}[^|]*\|\s*(\d+)/i);
     if (unableMatch) unable = parseInt(unableMatch[1], 10);
 
-    // If summary table not matched directly, count bug sections: "### [BUG-"
-    if (confirmed === 0) {
-      const bugMatches = markdown.match(/###\s*\[(?:BUG|RULE)[^\]]+\]/gi);
-      if (bugMatches) confirmed = bugMatches.length;
+    // Fallback parsing from Test Execution Details table if summary table wasn't matched
+    if (total === 0) {
+      const testRows = markdown.match(/^\|\s*T\d+\s*\|/gmi);
+      if (testRows) total = testRows.length;
     }
 
-    return { total, confirmed, passed, inconclusive, unable };
+    if (confirmed === 0) {
+      const confRows = markdown.match(/\|\s*Confirmed Bug\s*\|/gi);
+      if (confRows) confirmed = confRows.length;
+      else {
+        const bugMatches = markdown.match(/###\s*\[?(?:BUG|RULE)[^\]\n]+\]?/gi);
+        if (bugMatches) confirmed = bugMatches.length;
+      }
+    }
+
+    if (passed === 0) {
+      const passRows = markdown.match(/\|\s*Passed\s*\|/gi);
+      if (passRows) passed = passRows.length;
+    }
+
+    return { total, confirmed, passed, inconclusive, unable, failed };
   }, [markdown]);
 
   // Render and sanitize Markdown HTML

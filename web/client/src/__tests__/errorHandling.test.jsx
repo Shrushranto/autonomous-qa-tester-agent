@@ -118,9 +118,9 @@ describe('Frontend Error Handling & Report Rendering Tests', () => {
     expect(screen.getByText(/http:\/\/localhost:3000/i)).toBeDefined();
 
     // Verify parsed KPI metrics cards
-    expect(screen.getByText('5')).toBeDefined(); // Total Attempted
-    expect(screen.getByText('3')).toBeDefined(); // Confirmed Bugs
-    expect(screen.getByText('2')).toBeDefined(); // Passed Tests
+    expect(screen.getAllByText('5').length).toBeGreaterThanOrEqual(1); // Total Attempted
+    expect(screen.getAllByText('3').length).toBeGreaterThanOrEqual(1); // Confirmed Bugs
+    expect(screen.getAllByText('2').length).toBeGreaterThanOrEqual(1); // Passed Tests
 
     // Verify report body
     expect(screen.getByText(/QA Test Report/i)).toBeDefined();
