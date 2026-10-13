@@ -43,3 +43,8 @@ reports/run_log.jsonl
 Thumbs.db
 .vscode/
 .idea/
+
+# Learning notebook documents
+Autonomous_QA_Agent_Learning_Notebook.docx
+Autonomous_QA_Agent_Learning_Notebook.pdf
+
