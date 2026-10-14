@@ -155,8 +155,8 @@ class LLMClient:
         if system_instruction:
             contents = f"{system_instruction}\n\n{prompt}"
 
-        # Fallback models in case of quota exhaustion
-        fallback_models = [self.model, "gemini-3.7-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
+        # Fallback models in case of quota exhaustion or server demand spikes
+        fallback_models = [self.model, "gemini-3.1-flash-lite", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
         seen_models = set()
         last_error = None
         max_retries_per_model = 3

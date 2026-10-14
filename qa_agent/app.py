@@ -64,6 +64,11 @@ def _parse_args() -> argparse.Namespace:
         metavar="FILE",
         help="Output path for the Markdown bug report (default: reports/bug_report.md)",
     )
+    parser.add_argument(
+        "--model",
+        default=os.environ.get("LLM_MODEL"),
+        help="Gemini model to use (default: gemini-3.1-flash-lite or read from LLM_MODEL)",
+    )
     return parser.parse_args()
 
 
@@ -124,7 +129,7 @@ def _run_pipeline(args: argparse.Namespace) -> None:
     # 2. Build LLM client                                                  #
     # ------------------------------------------------------------------ #
     try:
-        client = LLMClient(max_calls=args.max_calls)
+        client = LLMClient(max_calls=args.max_calls, model=args.model)
     except RuntimeError as e:
         sys.exit(f"[ERROR] {e}")
 
